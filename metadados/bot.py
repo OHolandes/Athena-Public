@@ -1,6 +1,6 @@
 from discord.ext import commands
 
-__TOKEN__ = "Njc3OTEzNDYzNDY4ODUxMjA3.XkbKHA.d5OVBxGNsMGUUXRMBRoipkgi7u8"
+__TOKEN__ = "TOKEN AQUI"
 
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or("."),
