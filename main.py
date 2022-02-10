@@ -1,8 +1,10 @@
+from datetime import datetime
 import random
 import asyncio
 from random import randint, choice
 from metadados.bot import __TOKEN__, bot
-from metadados.variaveis import atividaddes, msg_ajuda, CANAIS_ADM, SAUDACOES
+from metadados.variaveis import msg_ajuda, CANAIS_ADM, SAUDACOES
+from Atividades.base import atividades
 
 import discord
 from discord.ext import commands
@@ -17,7 +19,7 @@ async def on_ready():
     print("-" * 30)
 
     while True:
-        await bot.change_presence(activity=choice(choice(list(atividaddes.values()))))
+        await bot.change_presence(activity=choice(choice(list(atividades.values()))))
         await asyncio.sleep(60)
 
 
@@ -54,43 +56,43 @@ class CommandsPrivate:
             type_time = random.uniform(1, 3)
             await asyncio.sleep(type_time)
 
-        destino = bot.get_channel(CANAIS_ADM["diretoria"])
+        destino: discord.TextChannel = bot.get_channel(CANAIS_ADM["diretoria"])
 
         if ctx.channel != destino:
             await ctx.send(f"Pronto! Relatório enviado em {destino.mention}")
 
         temp_string = f"""
         Estatisticas:
-        {ctx.guild.member_count} Membros.
-        {ctx.guild.premium_subscription_count} Boosts.
-        Nível: {ctx.guild.verification_level}.\n
+        _{ctx.guild.member_count}_ Membros.
+        _{ctx.guild.premium_subscription_count}_ Boosts.
+        Nível: _{ctx.guild.verification_level}_.\n
         """
 
         temp_string += f"{len(ctx.guild.text_channels)} canais de texto:\n"
         for chn in ctx.guild.text_channels:
-            temp_string += f"{chn.name} \t| ID:{chn.id} \t| nsfw:{chn.nsfw}\n"
+            temp_string += f"**{chn.name:<30}**| ID:_{chn.id}_ \t| nsfw:{'sim' if chn.nsfw else 'não'}\n"
         temp_string += "\n"
 
         temp_string += f"{len(ctx.guild.categories)} categorias:\n"
         for ctg in ctx.guild.categories:
-            temp_string += f"{ctg.name} \t| ID:{ctg.id} \t| nsfw: {ctg.nsfw}\n"
+            temp_string += f"**{ctg.name:<30}**| ID:_{ctg.id}_ \t| nsfw: {'sim' if ctg.nsfw else 'não'}\n"
         temp_string += "\n"
 
         temp_string += f"{len(ctx.guild.roles) - 1} cargos:\n"
         for rls in ctx.guild.roles[1:]:
-            temp_string += f"{rls.name} \t| ID:{rls.id}\n"
+            temp_string += f"**{rls.name:<30}**| ID:_{rls.id}_\n"
         temp_string += "\n"
 
         await destino.send(ctx.author.mention)
         await destino.send(embed=discord.Embed(title=f"Relatório feito ao {ctx.author}\n"
-                                                     f"ID: {ctx.author.id} ({ctx.author.roles[-1]})",
+                                                     f"ID: _{ctx.author.id}_ ({ctx.author.roles[-1]})",
                                                description=temp_string,
                                                color=0xff0000))
 
     @staticmethod
     @bot.command()
-    @commands.has_permissions(administrator=True, manage_messages=True)
-    async def log(ctx, nome: discord.Member = None, limit=10, *, audit=False):
+    @commands.has_permissions(manage_messages=True)
+    async def log(ctx, nome: discord.Member = None, limit=10):
         async with ctx.typing():
             type_time = random.uniform(0.5, 2)
             await asyncio.sleep(type_time)
@@ -108,53 +110,65 @@ class CommandsPrivate:
                     cont += 1
         await ctx.send(temp_string)
 
-        if audit:
-            temp_string = f"Últimas {limit * 2} ações no servidor:"
-            async for entrada in ctx.guild.audit_logs(limit=limit * 2):
-                temp_string += f"{entrada.user}: {entrada.action} -> {entrada.target}\n"
-            ctx.send(temp_string)
-
     @staticmethod
     @bot.command()
     @commands.has_permissions(kick_members=True)
-    async def kick(ctx, nome: discord.Member):
-        destino = bot.get_channel(CANAIS_ADM["secretaria"])
+    async def kick(ctx, nome: discord.Member, motivo: str = "Sem motivo ||abuso de autoridade...||"):
+        destino: discord.TextChannel = bot.get_channel(CANAIS_ADM["secretaria"])
         await nome.kick()
         _string = f"""
-        Nick: {nome.nick}
-        **EXPULSO** por {ctx.author}
+        **Nick:** {nome.display_name}
+        Expulsão feita por {ctx.author}
+        **Motivo:** {motivo}
         """
+        gif = "./metadados/extras/vv.gif"
+        arquivo = discord.File(gif)
         await destino.send(embed=discord.Embed(title="Usuário expulso:",
                                                description=_string,
-                                               color=0xff0000))
+                                               color=0xff0000).set_image(url="attachment://image.gif"),
+                           file=arquivo)
 
     @staticmethod
     @bot.command()
     @commands.has_permissions(ban_members=True)
-    async def ban(ctx, nome: discord.Member):
-        destino = bot.get_channel(CANAIS_ADM["secretaria"])
+    async def ban(ctx, nome: discord.Member, motivo: str = "Sem motivo ||abuso de autoridade...||"):
+        destino: discord.TextChannel = bot.get_channel(CANAIS_ADM["secretaria"])
         await nome.ban()
         _string = f"""
-        Nick: {nome.nick}
-        **BANIDO** por {ctx.author}
+        **Nick:** {nome.display_name}
+        Banimento feito por {ctx.author}
+        **Motivo:** {motivo}
         """
+        gif = "./metadados/extras/banido.gif"
+        arquivo = discord.File(gif)
         await destino.send(embed=discord.Embed(title="Usuário banido:",
                                                description=_string,
-                                               color=0xff0000))
+                                               color=0xff0000).set_image(url="attachment://image.gif"),
+                           file=arquivo)
 
     @staticmethod
     @bot.command()
     @commands.has_permissions(ban_members=True)
-    async def desban(ctx, nome: discord.Member):
-        destino = bot.get_channel(CANAIS_ADM["secretaria"])
-        await nome.unban()
+    async def desban(ctx, nome: discord.User):
+        destino: discord.TextChannel = bot.get_channel(CANAIS_ADM["secretaria"])
+        bans = await ctx.guild.bans()
+        for salafrario in bans:
+            if salafrario.name == nome.name:
+                try:
+                    await salafrario.unban()
+                except Exception as error:
+                    print("Deu ruim", error)
         _string = f"""
-        Nick: {nome.nick}
-        **desbanido** por {ctx.author}
+        **Nick:** {nome.display_name}
+        **desbanido** pelo {ctx.author}
+        Agora o {nome.display_name}{nome.discriminator} voltou a ficar ON!
         """
+        gif = "./metadados/extras/ta_on.gif"
+        arquivo = discord.File(gif)
         await destino.send(embed=discord.Embed(title="Usuário desbanido:",
                                                description=_string,
-                                               color=0xff0000))
+                                               color=0xff0000).set_image(url="attachment://image.gif"),
+                           file=arquivo)
 
 
 class CommandsPublic:
@@ -187,7 +201,7 @@ class CommandsPublic:
         try:
             rolls, limit = map(int, dice.split('d'))
         except Exception:
-            await ctx.send('O formato tem de estar em NdN!')
+            await ctx.send('O formato tem que estar em NdN!')
             return
 
         result = ', '.join(str(randint(1, limit)) for _ in range(rolls))
@@ -203,19 +217,32 @@ class CommandsPublic:
         await ctx.send(choice(choices))
 
     @staticmethod
-    @bot.command()
+    @bot.command(aliases=("comandos",))
     async def ajuda(ctx):
         async with ctx.typing():
             type_time = random.uniform(0.5, 2)
             await asyncio.sleep(type_time)
-        await ctx.send(embed=discord.Embed(title="Alguns comandozinhos",
+        await ctx.send(embed=discord.Embed(title="Veja oquê eu posso fazer...",
                                            description=msg_ajuda,
                                            color=0xff0000))
 
     @staticmethod
     @bot.command()
-    async def meuid(ctx):
-        await ctx.send(ctx.author.id)
+    async def stalk(ctx, nome: discord.member.BaseUser = ""):
+        vc = nome if nome != "" else ctx.author
+        async with ctx.typing():
+            type_time = random.uniform(0.5, 2)
+            await asyncio.sleep(type_time)
+        _string = f"""
+        Seu cracha(ID): _{vc.id}_
+        Entrou aqui em: **{vc.joined_at:%d-%m-%Y %H:%M}**
+        Seu cargo mais alto: **{vc.top_role}**
+        Está no Discord desde: **{vc.created_at:%d-%m-%Y %H:%M}**
+        """
+        await ctx.send(embed=discord.Embed(
+            title=f"Tag:`{vc.name}#{vc.discriminator}`/**{vc.display_name}**",
+            description=_string, colour=0xff0000).set_thumbnail(url=str(vc.avatar_url_as()))
+        )
 
     @staticmethod
     @bot.command()

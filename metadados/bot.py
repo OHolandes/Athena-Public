@@ -9,4 +9,3 @@ bot = commands.Bot(
 )
 bot.remove_command("help")
 
-intents = bot.intents.all()
