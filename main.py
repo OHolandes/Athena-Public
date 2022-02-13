@@ -146,30 +146,6 @@ class CommandsPrivate:
                                                color=0xff0000).set_image(url="attachment://image.gif"),
                            file=arquivo)
 
-    @staticmethod
-    @bot.command()
-    @commands.has_permissions(ban_members=True)
-    async def desban(ctx, nome: discord.User):
-        destino: discord.TextChannel = bot.get_channel(CANAIS_ADM["secretaria"])
-        bans = await ctx.guild.bans()
-        for salafrario in bans:
-            if salafrario.name == nome.name:
-                try:
-                    await salafrario.unban()
-                except Exception as error:
-                    print("Deu ruim", error)
-        _string = f"""
-        **Nick:** {nome.display_name}
-        **desbanido** pelo {ctx.author}
-        Agora o {nome.display_name}{nome.discriminator} voltou a ficar ON!
-        """
-        gif = "./metadados/extras/ta_on.gif"
-        arquivo = discord.File(gif)
-        await destino.send(embed=discord.Embed(title="Usuário desbanido:",
-                                               description=_string,
-                                               color=0xff0000).set_image(url="attachment://image.gif"),
-                           file=arquivo)
-
 
 class CommandsPublic:
 
@@ -217,16 +193,6 @@ class CommandsPublic:
         await ctx.send(choice(choices))
 
     @staticmethod
-    @bot.command(aliases=("comandos",))
-    async def ajuda(ctx):
-        async with ctx.typing():
-            type_time = random.uniform(0.5, 2)
-            await asyncio.sleep(type_time)
-        await ctx.send(embed=discord.Embed(title="Veja oquê eu posso fazer...",
-                                           description=msg_ajuda,
-                                           color=0xff0000))
-
-    @staticmethod
     @bot.command()
     async def stalk(ctx, nome: discord.member.BaseUser = ""):
         vc = nome if nome != "" else ctx.author
@@ -258,6 +224,16 @@ class CommandsPublic:
             await ctx.send('Sim, Essa é COOL.')
         else:
             await ctx.send(f'Não, {msg} não é cool.')
+
+    @staticmethod
+    @bot.command(aliases=("comandos",))
+    async def ajuda(ctx):
+        async with ctx.typing():
+            type_time = random.uniform(0.5, 2)
+            await asyncio.sleep(type_time)
+        await ctx.send(embed=discord.Embed(title="Veja oquê eu posso fazer...",
+                                           description=msg_ajuda,
+                                           color=0xff0000))
 
 
 bot.run(__TOKEN__)

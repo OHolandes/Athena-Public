@@ -25,5 +25,4 @@ msg_ajuda = "**.ola** | **.oi** | **.iai** | **.athena** : Mande um ola caloroso
             "**.kick** MEMBRO MOTIVO: Dou uma voadora em algum membro...\n" \
             "Você pode **kickar** sem um motivo especificado, porém isso seria abuso de autoridade...\n" \
             "**.ban** MEMBRO MOTIVO: Excluo um membro da sociedade.\n" \
-            "Você pode **banir** sem um motivo especificado, porém isso seria abuso de autoridade...\n" \
-            "**.desban** MEMBRO: Se caso você estiver arrependido de ter excluido alguem da sociedade."
+            "Você pode **banir** sem um motivo especificado, porém isso seria abuso de autoridade..."
