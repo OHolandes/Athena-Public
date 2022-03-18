@@ -36,17 +36,20 @@ class CommandsPrivate:
         for i in range(times):
             await ctx.send(_string)
 
+
     @staticmethod
     @bot.command()
     @commands.has_permissions(administrator=True)
     async def ping(ctx):
         await ctx.send(f"Pong! {bot.latency}")
 
+
     @staticmethod
     @bot.command()
     @commands.has_permissions(administrator=True)
-    async def idchn(ctx):
+    async def cep(ctx):
         await ctx.send(ctx.channel.id)
+
 
     @staticmethod
     @bot.command()
@@ -61,26 +64,29 @@ class CommandsPrivate:
         if ctx.channel != destino:
             await ctx.send(f"Pronto! Relatório enviado em {destino.mention}")
 
-        temp_string = f"""
+        temp_string = """
         Estatisticas:
-        _{ctx.guild.member_count}_ Membros.
-        _{ctx.guild.premium_subscription_count}_ Boosts.
-        Nível: _{ctx.guild.verification_level}_.\n
-        """
+        _{} Membros_.
+        _{} Boosts_.
+        Nível: _{}_.\n
+        """.format(ctx.guild.member_count, 
+                    ctx.guild.premium_subscription_count, 
+                    ctx.guild.verification_level
+                )
 
-        temp_string += f"{len(ctx.guild.text_channels)} canais de texto:\n"
+        temp_string += f"Canais de texto **x{len(ctx.guild.text_channels)}**:\n\n"
         for chn in ctx.guild.text_channels:
-            temp_string += f"**{chn.name:<30}**| ID:_{chn.id}_ \t| nsfw:{'sim' if chn.nsfw else 'não'}\n"
+            temp_string += "**{}** | ID:_{}_ \t| nsfw:{}\n".format(chn.name, chn.id, 'sim' if chn.nsfw else 'não')
         temp_string += "\n"
 
-        temp_string += f"{len(ctx.guild.categories)} categorias:\n"
+        temp_string += f"Categorias **x{len(ctx.guild.categories)}**:\n\n"
         for ctg in ctx.guild.categories:
-            temp_string += f"**{ctg.name:<30}**| ID:_{ctg.id}_ \t| nsfw: {'sim' if ctg.nsfw else 'não'}\n"
+            temp_string += "**{}** | ID:_{}_ | nsfw: {}\n".format(ctg.name, ctg.id, 'sim' if ctg.nsfw else 'não')
         temp_string += "\n"
 
-        temp_string += f"{len(ctx.guild.roles) - 1} cargos:\n"
-        for rls in ctx.guild.roles[1:]:
-            temp_string += f"**{rls.name:<30}**| ID:_{rls.id}_\n"
+        temp_string += f"Cargos **x{len(ctx.guild.roles) - 1}**:\n\n"
+        for rls in ctx.guild.roles[-1::-1]:
+            temp_string += "**{}** | ID:_{}_\n".format(rls.name, rls.id)
         temp_string += "\n"
 
         await destino.send(ctx.author.mention)
@@ -89,26 +95,57 @@ class CommandsPrivate:
                                                description=temp_string,
                                                color=0xff0000))
 
+
     @staticmethod
     @bot.command()
     @commands.has_permissions(manage_messages=True)
-    async def log(ctx, nome: discord.Member = None, limit=10):
+    async def log(ctx, *args):
+        limit = 15
         async with ctx.typing():
             type_time = random.uniform(0.5, 2)
             await asyncio.sleep(type_time)
-        if nome is None:
-            nome = ctx.author
+        nome = " ".join(args)
+        if not nome:
+            nome = ctx.author.display_name
         cont = 0
 
-        temp_string = f"Últimas {limit} mensagens de {nome.mention}:\n"
+        temp_string = f"Últimas {limit} mensagens de {nome}:\n"
         async for msg in ctx.channel.history():
             if cont == limit:
                 break
             else:
-                if nome == msg.author:
+                if nome == msg.author.display_name or nome == msg.author.mention:
                     temp_string += f"{msg.author}: {msg.content}\n"
                     cont += 1
         await ctx.send(temp_string)
+
+
+    @staticmethod
+    @bot.command()
+    @commands.has_permissions(manage_messages=True)
+    async def faxina(ctx, limit:int = 100):
+        await ctx.channel.purge(limit=limit + 1)
+
+
+    @staticmethod
+    @bot.command()
+    @commands.has_permissions(manage_messages=True)
+    async def basta(ctx):
+        react = discord.utils.get(ctx.guild.emojis, name="Crusanos")
+        await ctx.channel.set_permissions(ctx.guild.default_role, read_messages=True,
+                                                send_messages=False)
+        await ctx.message.add_reaction(react)
+
+
+    @staticmethod
+    @bot.command()
+    @commands.has_permissions(manage_messages=True)
+    async def liberado(ctx):
+        react = discord.utils.get(ctx.guild.emojis, name="confusedwat")
+        await ctx.channel.set_permissions(ctx.guild.default_role, read_messages=True,
+                                                send_messages=True)
+        await ctx.message.add_reaction(react)
+
 
     @staticmethod
     @bot.command()
@@ -127,6 +164,7 @@ class CommandsPrivate:
                                                description=_string,
                                                color=0xff0000).set_image(url="attachment://image.gif"),
                            file=arquivo)
+
 
     @staticmethod
     @bot.command()
@@ -158,6 +196,7 @@ class CommandsPublic:
         resp = choice(SAUDACOES)
         await ctx.send(resp)
 
+
     @staticmethod
     @bot.command()
     async def soma(ctx, *nums: int):
@@ -166,6 +205,7 @@ class CommandsPublic:
             type_time = random.uniform(0.5, 2)
             await asyncio.sleep(type_time)
         await ctx.send(str(sum(nums)))
+
 
     @staticmethod
     @bot.command(aliases=("dado",))
@@ -183,6 +223,7 @@ class CommandsPublic:
         result = ', '.join(str(randint(1, limit)) for _ in range(rolls))
         await ctx.send(result)
 
+
     @staticmethod
     @bot.command(description='Quando se quer ajustar as contas de outra forma', aliases=("prefere",))
     async def escolha(ctx, *choices: str):
@@ -191,6 +232,7 @@ class CommandsPublic:
             type_time = random.uniform(0.5, 2)
             await asyncio.sleep(type_time)
         await ctx.send(choice(choices))
+
 
     @staticmethod
     @bot.command()
@@ -207,8 +249,9 @@ class CommandsPublic:
         """
         await ctx.send(embed=discord.Embed(
             title=f"Tag:`{vc.name}#{vc.discriminator}`/**{vc.display_name}**",
-            description=_string, colour=0xff0000).set_thumbnail(url=str(vc.avatar_url_as()))
+            description=_string, colour=0xff0000).set_thumbnail(url=vc.avatar_url)
         )
+
 
     @staticmethod
     @bot.command()
@@ -218,12 +261,17 @@ class CommandsPublic:
             type_time = random.uniform(0.5, 2)
             await asyncio.sleep(type_time)
 
-        msg = ctx.message.content
-
-        if msg.lower() == "athena":
+        if "thena" in ctx.message.content:
             await ctx.send('Sim, Essa é COOL.')
         else:
-            await ctx.send(f'Não, {msg} não é cool.')
+            await ctx.send(f'Não, isso não é cool.')
+
+
+    @staticmethod
+    @bot.command()
+    async def convite(ctx):
+        await ctx.send("https://discord.gg/DyNMgay")
+
 
     @staticmethod
     @bot.command(aliases=("comandos",))
@@ -234,6 +282,107 @@ class CommandsPublic:
         await ctx.send(embed=discord.Embed(title="Veja oquê eu posso fazer...",
                                            description=msg_ajuda,
                                            color=0xff0000))
+
+
+
+@CommandsPrivate.teste.error
+async def raise_permission(ctx, error):
+    if isinstance(error, commands.errors.MissingPermissions):
+        embed=discord.Embed(title="Permissão Negada.", 
+                            description="Você não tem permissão para usar este comando.", color=0xffa500)
+        await ctx.send(ctx.author.mention, embed=embed)
+    else:
+        raise error
+
+
+@CommandsPrivate.ping.error
+async def raise_permission(ctx, error):
+    if isinstance(error, commands.errors.MissingPermissions):
+        embed=discord.Embed(title="Permissão Negada.", 
+                            description="Você não tem permissão para usar este comando.", color=0xffa500)
+        await ctx.send(ctx.author.mention, embed=embed)
+    else:
+        raise error
+
+
+@CommandsPrivate.relatorio.error
+async def raise_permission(ctx, error):
+    if isinstance(error, commands.errors.MissingPermissions):
+        embed=discord.Embed(title="Permissão Negada.", 
+                            description="Você não tem permissão para usar este comando.", color=0xffa500)
+        await ctx.send(ctx.author.mention, embed=embed)
+    else:
+        raise error
+
+
+@CommandsPrivate.faxina.error
+async def raise_permission(ctx, error):
+    if isinstance(error, commands.errors.MissingPermissions):
+        embed=discord.Embed(title="Permissão Negada.", 
+                            description="Você não tem permissão para usar este comando.", color=0xffa500)
+        await ctx.send(ctx.author.mention, embed=embed)
+    else:
+        raise error
+
+
+@CommandsPrivate.ban.error
+async def raise_permission(ctx, error):
+    if isinstance(error, commands.errors.MissingPermissions):
+        embed=discord.Embed(title="Permissão Negada.", 
+                            description="Você não tem permissão para usar este comando.", color=0xffa500)
+        await ctx.send(ctx.author.mention, embed=embed)
+    else:
+        raise error
+
+
+@CommandsPrivate.kick.error
+async def raise_permission(ctx, error):
+    if isinstance(error, commands.errors.MissingPermissions):
+        embed=discord.Embed(title="Permissão Negada.", 
+                            description="Você não tem permissão para usar este comando.", color=0xffa500)
+        await ctx.send(ctx.author.mention, embed=embed)
+    else:
+        raise error
+
+
+@CommandsPrivate.cep.error
+async def raise_permission(ctx, error):
+    if isinstance(error, commands.errors.MissingPermissions):
+        embed=discord.Embed(title="Permissão Negada.", 
+                            description="Você não tem permissão para usar este comando.", color=0xffa500)
+        await ctx.send(ctx.author.mention, embed=embed)
+    else:
+        raise error
+
+
+@CommandsPrivate.liberado.error
+async def raise_permission(ctx, error):
+    if isinstance(error, commands.errors.MissingPermissions):
+        embed=discord.Embed(title="Permissão Negada.", 
+                            description="Você não tem permissão para usar este comando.", color=0xffa500)
+        await ctx.send(ctx.author.mention, embed=embed)
+    else:
+        raise error
+
+
+@CommandsPrivate.log.error
+async def raise_permission(ctx, error):
+    if isinstance(error, commands.errors.MissingPermissions):
+        embed=discord.Embed(title="Permissão Negada.", 
+                            description="Você não tem permissão para usar este comando.", color=0xffa500)
+        await ctx.send(ctx.author.mention, embed=embed)
+    else:
+        raise error
+
+
+@CommandsPrivate.basta.error
+async def raise_permission(ctx, error):
+    if isinstance(error, commands.errors.MissingPermissions):
+        embed=discord.Embed(title="Permissão Negada.", 
+                            description="Você não tem permissão para usar este comando.", color=0xffa500)
+        await ctx.send(ctx.author.mention, embed=embed)
+    else:
+        raise error
 
 
 bot.run(__TOKEN__)
