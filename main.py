@@ -3,19 +3,22 @@ import random
 import asyncio
 from random import randint, choice
 from metadados.bot import __TOKEN__, bot
-from metadados.variaveis import msg_ajuda, CANAIS_ADM, SAUDACOES
+from metadados.variaveis import msg_ajuda, CANAIS_ADM, SAUDACOES, GUIA_ANONIMA_ID
 from Atividades.base import atividades
 
 import discord
 from discord.ext import commands
 
 
+intents = discord.Intents.default()
+intents.messages = True
+
+
 @bot.event
 async def on_ready():
     print("=" * 30)
-    print('Buenas tardes!')
     print("Estou pronta para trabalhar.")
-    print(f"{bot.user.id:_^30}")
+    print(f"{str(bot.user):_^30}")
     print("-" * 30)
 
     while True:
@@ -35,6 +38,28 @@ class CommandsPrivate:
             await asyncio.sleep(type_time)
         for i in range(times):
             await ctx.send(_string)
+    
+
+    @staticmethod
+    @bot.command()
+    @commands.has_permissions(administrator=True)
+    async def prompt(ctx):
+        last_message = ""
+        await ctx.send('Agora estarei monitorando suas mensagens... Mande "exit" para encerrar.')
+        while True:
+            msg = await ctx.channel.fetch_message(ctx.channel.last_message_id)
+            if last_message != msg.content:
+                if msg.author == ctx.author:
+                    if "exit" in msg.content:
+                        await ctx.send("Fechando console...")
+                        break
+                    else:
+                        try:
+                            await ctx.send(eval(msg.content))
+                        except Exception as error:
+                            await ctx.send(str(error))
+                    last_message = msg.content
+            await asyncio.sleep(1)
 
 
     @staticmethod
@@ -274,6 +299,62 @@ class CommandsPublic:
 
 
     @staticmethod
+    @bot.command()
+    async def chegamais(ctx, *guests: discord.Member):
+        def is_pin(msg):
+            """
+            Para não deletar mensagens pinadas.
+            """
+            return not msg.pinned
+
+        if not guests:
+            await ctx.send("Irá conversar sozinho, meu camarada solitario?")
+
+        elif ctx.channel.category_id != GUIA_ANONIMA_ID:
+            hehe = discord.utils.get(bot.emojis, name="Cringe")
+            category_private = discord.utils.get(ctx.guild.categories, id=GUIA_ANONIMA_ID)
+            embedincog = f"""
+            Foi mal, mas você não está num canal apropriado para isso.
+            Só posso deixar vocês "a sós" {hehe} nestes canais:
+            """
+
+            for chn in category_private.channels:
+                embedincog += chn.mention
+            embed_incog = discord.Embed(title="Algo de errado não está certo.", description=embedincog, 
+                                        color=0xffa500)
+            await ctx.send(embed=embed_incog)
+
+        else:
+            await ctx.send("Preparando o canal...")
+            await ctx.channel.set_permissions(ctx.guild.default_role, read_messages=False)
+            conservative = [guest for guest in guests]
+            conservative.append(ctx.author)
+            for people in conservative:
+                await ctx.channel.set_permissions(people, read_messages=True)
+            await ctx.send("Pronto!")
+            warn = discord.utils.get(bot.get_all_channels(), id=441263333807751178)
+            await ctx.send("Obs: lembrando que administradores e moderadores ainda tem acesso a esse canal")
+            await ctx.send(f"Não viole as {warn.mention} nem as diretrizes do Discord")
+
+            now = datetime.now()
+            last_hour, last_minute = ctx.message.created_at.hour, ctx.message.created_at.minute
+            init_hour, init_minute = now.now().hour, now.now().minute
+            last_message = await ctx.channel.fetch_message(ctx.channel.last_message_id)
+
+            while (last_hour == init_hour) or (last_minute <= init_minute - 10):
+                last_message = await ctx.channel.fetch_message(ctx.channel.last_message_id)
+                now = datetime.now()
+                last_hour, last_minute = last_message.created_at.hour, last_message.created_at.minute
+                init_hour, init_minute = now.now().hour, now.now().minute
+                asyncio.sleep(1)
+
+            await ctx.send(f"{ctx.author.mention} tempo limite exedido!")
+            asyncio.sleep(3)
+            await ctx.channel.purge(before=datetime.now(), check=is_pin)
+            await ctx.channel.set_permissions(ctx.guild.default_role, read_messages=True)
+
+
+    @staticmethod
     @bot.command(aliases=("comandos",))
     async def ajuda(ctx):
         async with ctx.typing():
@@ -294,6 +375,15 @@ async def raise_permission(ctx, error):
     else:
         raise error
 
+
+@CommandsPrivate.prompt.error
+async def raise_permission(ctx, error):
+    if isinstance(error, commands.errors.MissingPermissions):
+        embed=discord.Embed(title="Permissão Negada.", 
+                            description="Você não tem permissão para usar este comando.", color=0xffa500)
+        await ctx.send(ctx.author.mention, embed=embed)
+    else:
+        raise error
 
 @CommandsPrivate.ping.error
 async def raise_permission(ctx, error):
