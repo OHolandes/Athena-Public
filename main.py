@@ -26,6 +26,13 @@ async def on_ready():
         await asyncio.sleep(60)
 
 
+def is_pin(msg):
+        """
+        Para não deletar mensagens pinadas.
+        """
+        return not msg.pinned
+
+
 class CommandsPrivate:
 
     @staticmethod
@@ -149,7 +156,7 @@ class CommandsPrivate:
     @bot.command()
     @commands.has_permissions(manage_messages=True)
     async def faxina(ctx, limit:int = 100):
-        await ctx.channel.purge(limit=limit + 1)
+        await ctx.channel.purge(limit=limit + 1, check=is_pin)
 
 
     @staticmethod
@@ -301,14 +308,8 @@ class CommandsPublic:
     @staticmethod
     @bot.command()
     async def chegamais(ctx, *guests: discord.Member):
-        def is_pin(msg):
-            """
-            Para não deletar mensagens pinadas.
-            """
-            return not msg.pinned
-
         if not guests:
-            await ctx.send("Irá conversar sozinho, meu camarada solitario?")
+            await ctx.send("Irá conversar sozinho(a), jovem?")
 
         elif ctx.channel.category_id != GUIA_ANONIMA_ID:
             hehe = discord.utils.get(bot.emojis, name="Cringe")
@@ -320,7 +321,8 @@ class CommandsPublic:
 
             for chn in category_private.channels:
                 embedincog += chn.mention
-            embed_incog = discord.Embed(title="Algo de errado não está certo.", description=embedincog, 
+
+            embed_incog = discord.Embed(title="Não se precipite.", description=embedincog,
                                         color=0xffa500)
             await ctx.send(embed=embed_incog)
 
@@ -341,16 +343,16 @@ class CommandsPublic:
             init_hour, init_minute = now.now().hour, now.now().minute
             last_message = await ctx.channel.fetch_message(ctx.channel.last_message_id)
 
-            while (last_hour == init_hour) or (last_minute <= init_minute - 10):
+            while (last_hour == init_hour) or (last_minute > init_minute - 10):
                 last_message = await ctx.channel.fetch_message(ctx.channel.last_message_id)
                 now = datetime.now()
                 last_hour, last_minute = last_message.created_at.hour, last_message.created_at.minute
                 init_hour, init_minute = now.now().hour, now.now().minute
-                asyncio.sleep(1)
+                await asyncio.sleep(60)
 
-            await ctx.send(f"{ctx.author.mention} tempo limite exedido!")
-            asyncio.sleep(3)
-            await ctx.channel.purge(before=datetime.now(), check=is_pin)
+            await ctx.send(f"{ctx.author.mention} tempo limite excedido!")
+            await asyncio.sleep(3)
+            await ctx.channel.purge(check=is_pin)
             await ctx.channel.set_permissions(ctx.guild.default_role, read_messages=True)
 
 
