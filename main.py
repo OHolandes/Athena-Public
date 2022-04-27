@@ -373,8 +373,8 @@ class CommandsPublic:
     @bot.command(aliases=("comandos",))
     async def ajuda(ctx, _command: str = None):
         if _command in [cmd.name for cmd in bot.commands]:
-            if not _command.startswith("."):
-                _command = "." + _command
+            if not _command.startswith("::"):
+                _command = "::" + _command
             await ctx.send(embed=discord.Embed(title=_command,
                                             description=alta_ajuda[_command],
                                             color=0xff0000))
