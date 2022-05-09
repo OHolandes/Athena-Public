@@ -109,10 +109,12 @@ class CommandsPrivate:
         Estatisticas:
         _{} Membros_.
         _{} Boosts_.
-        Nível: _{}_.\n
+        Nível de verificação: _{}_.
+        Limite de emojis: {}\n
         """.format(ctx.guild.member_count, 
                     ctx.guild.premium_subscription_count, 
-                    ctx.guild.verification_level
+                    ctx.guild.verification_level,
+                    ctx.guild.emoji_limit
                 )
 
         temp_string += f"Canais de texto **x{len(ctx.guild.text_channels)}**:\n\n"
@@ -186,44 +188,57 @@ class CommandsPrivate:
         await ctx.channel.set_permissions(ctx.guild.default_role, read_messages=True,
                                                 send_messages=True)
         await ctx.message.add_reaction(react)
+    
+
+    @staticmethod
+    @bot.command()
+    @commands.has_permissions(manage_messages=True)
+    async def aviso(ctx, membro: discord.Member):
+        rol = discord.utils.get(ctx.guild.roles, name="Avisado")
+        if not rol in membro.roles:
+            await membro.add_roles(rol)
+        else:
+            await membro.remove_roles(rol)
 
 
     @staticmethod
     @bot.command()
     @commands.has_permissions(kick_members=True)
-    async def kick(ctx, nome: discord.Member, motivo: str = "Sem motivo ||abuso de autoridade...||"):
+    async def kick(ctx, nome: discord.Member, *motivo: str):
         destino: discord.TextChannel = bot.get_channel(CANAIS_ADM["secretaria"])
         await nome.kick()
+        if not motivo:
+            motivo = "Sem motivo ||abuso de autoridade...||"
+        else:
+            motivo = " ".join(motivo)
         _string = f"""
         **Nick:** {nome.display_name}
-        Expulsão feita por {ctx.author}
+        **Expulsão feita por** {ctx.author}
         **Motivo:** {motivo}
         """
-        gif = "./metadados/extras/vv.gif"
-        arquivo = discord.File(gif)
         await destino.send(embed=discord.Embed(title="Usuário expulso:",
                                                description=_string,
-                                               color=0xff0000).set_image(url="attachment://image.gif"),
-                           file=arquivo)
+                                               color=0xff0000).set_image(url="https://j.gifs.com/Kj1P90.gif"))
 
 
     @staticmethod
     @bot.command()
     @commands.has_permissions(ban_members=True)
-    async def ban(ctx, nome: discord.Member, motivo: str = "Sem motivo ||abuso de autoridade...||"):
+    async def ban(ctx, nome: discord.Member, *motivo: str):
         destino: discord.TextChannel = bot.get_channel(CANAIS_ADM["secretaria"])
         await nome.ban()
+        if not motivo:
+            motivo = "Sem motivo ||abuso de autoridade...||"
+        else:
+            motivo = " ".join(motivo)
         _string = f"""
         **Nick:** {nome.display_name}
-        Banimento feito por {ctx.author}
+        **Banimento feito por** {ctx.author}
         **Motivo:** {motivo}
         """
-        gif = "./metadados/extras/banido.gif"
-        arquivo = discord.File(gif)
         await destino.send(embed=discord.Embed(title="Usuário banido:",
                                                description=_string,
-                                               color=0xff0000).set_image(url="attachment://image.gif"),
-                           file=arquivo)
+                                               color=0xff0000).set_image(url="https://c.tenor.com/MyqcGt-kAN8AAAAC/banido.gif"))
 
 
 class CommandsPublic:
@@ -296,6 +311,34 @@ class CommandsPublic:
 
     @staticmethod
     @bot.command()
+    async def privilegios(ctx):
+        pms = ctx.author.permissions_in(ctx.channel)
+        privis = f"""
+        **Administrador**: {"sim" if pms.administrator else "não(ufa!)"}
+
+        **Neste canal:**
+        Gerenciar emojis: {"sim" if pms.manage_emojis else "não"}
+        Gerenciar canais: {"sim" if pms.manage_channels else "não"}
+        Gerenciar mensagens: {"sim" if pms.manage_messages else "não"}
+        Enviar arquivos: {"sim" if pms.attach_files else "não"}
+        Usar emojis externos: {"sim" if pms.use_external_emojis else "não"}
+
+        **Geral:**
+        Mudar apelido: {"sim" if pms.change_nickname else "não"}
+        Gerenciar apelidos: {"sim" if pms.manage_nicknames else "não"}
+        Gerenciar cargos: {"sim" if pms.manage_permissions else "não"}
+        Ver auditoria: {"sim" if pms.view_audit_log else "não"}
+        Kickar Membros: {"sim" if pms.kick_members else "não"}
+        Banir membros: {"sim" if pms.ban_members else "não"}
+        """
+        await ctx.send(embed=discord.Embed(
+                                        title="Suas permissões:",
+                                        description=privis
+                                    )
+                    )
+
+    @staticmethod
+    @bot.command()
     async def cool(ctx, string:str):
         """Isso é cool?"""
         async with ctx.typing():
@@ -345,25 +388,23 @@ class CommandsPublic:
                 await ctx.channel.set_permissions(people, read_messages=True)
 
             await ctx.send("Pronto!")
-            warn = discord.utils.get(bot.get_all_channels(), id=441263333807751178)
             await ctx.send("Obs: lembrando que administradores e moderadores ainda tem acesso a esse canal")
-            await ctx.send(f"Não viole as {warn.mention} nem as diretrizes do Discord")
+            await ctx.send(f"Não viole as <#441263333807751178> nem as diretrizes do Discord")
 
-            now = datetime.now()
-            last_hour, last_minute = ctx.message.created_at.hour, ctx.message.created_at.minute
-            init_hour, init_minute = now.now().hour, now.now().minute
-            last_message = await ctx.channel.fetch_message(ctx.channel.last_message_id)
+            init_message = await ctx.channel.fetch_message(ctx.channel.last_message_id)
+            last_message = init_message
+            seconds = 0
 
-            while (last_hour == init_hour) or (last_minute > init_minute - 10):
+            while (init_message == last_message) and (seconds < 600):
                 last_message = await ctx.channel.fetch_message(ctx.channel.last_message_id)
-
-                now = datetime.now()
-                last_hour, last_minute = last_message.created_at.hour, last_message.created_at.minute
-                init_hour, init_minute = now.now().hour, now.now().minute
-
+                if init_message != last_message:
+                    seconds = 0
+                    init_message = last_message
                 await asyncio.sleep(1)
+                seconds += 1
 
             await ctx.send(f"{ctx.author.mention} tempo limite excedido!")
+            await ctx.send("Puxando a descarga em **5** segundos")
             await asyncio.sleep(5)
             await ctx.channel.purge(limit=999)
             await ctx.channel.edit(sync_permissions=True)
@@ -373,9 +414,7 @@ class CommandsPublic:
     @bot.command(aliases=("comandos",))
     async def ajuda(ctx, _command: str = None):
         if _command in [cmd.name for cmd in bot.commands]:
-            if not _command.startswith("::"):
-                _command = "::" + _command
-            await ctx.send(embed=discord.Embed(title=_command,
+            await ctx.send(embed=discord.Embed(title="::"+_command,
                                             description=alta_ajuda[_command],
                                             color=0xff0000))
         else:
