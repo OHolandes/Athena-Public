@@ -8,20 +8,21 @@ GUIA_ANONIMA_ID = 956319073568976967
 
 msg_ajuda = "**::ola** | **::oi** | **::iai** | **::athena**: Mande um ola caloroso para mim, e responderei!\n" \
             "**::cool** `texto`: Você pode me perguntar se algo é COOl (provavelmente sou eu).\n" \
-            "**::soma** `números...`: Somo uns números para você.\n" \
+            "**::pitagoras** `expressão...`: Resolvo uma expressão matemática no estilo Pitágoras.\n" \
             '**::rola** | **::dado** `NdN`: Consigo rolar uns dados para você se for conveniente.\n' \
             "**::escolha** | **::prefere** `opções...`: Vou escolher a melhor opção entre algumas opções.\n" \
             "**::stalk**: Envio algumas informações suas... Anda stalkeando você mesmo(a)!?.\n" \
-            "**::privilegios**: Mostro suas permissões nesse canal.\n" \
+            "**::privilegios** `membro...`: Mostro suas permissões nesse canal ou de outra pessoa.\n" \
             "**::convite**: Mando o convite do servidor.\n" \
             "**::chegamais** `menções...`: Separo um canal para você e mais pessoas ficarem a vontade.\n" \
             "**::ajuda** | **::comandos**: Esse já é um pouco autoexplicativo não?" \
             "\n\n" \
             "**Administração**:\n\n" \
-            '**::teste** `repete` `palavra`: Repito uma mensagem para saber se estou "di Boa"\n' \
+            '**::teste** `N vezes` `palavra`: Repito uma mensagem para saber se estou "di Boa"\n' \
             '**::prompt**: Abro meu console para você interagir com meu código ||pervertido(a)!||.\n' \
             "**::ping**: Mando a minha latência (morar nos E.U.A é para poucos).\n" \
             "**::cep**: Mando o ID do canal atual.\n" \
+            "**::cpf**: Envio o ID de alguém.\n" \
             "**::relatorio**: Faço um relatório geral do servidor." \
             "(n de membros, n de boosts, nivel, n de canais, n de categorias, n de cargos...).\n" \
             "**::faxina** `limite`: Dou uma limpeza das últimas (100 por padrão) mensagens no canal atual.\n" \
@@ -40,12 +41,35 @@ msg_ajuda = "**::ola** | **::oi** | **::iai** | **::athena**: Mande um ola calor
             "\n\n\n" \
             "Você ainda pode pedir uma explicação de alto calão de certos comandos usando **::ajuda** `comando`." \
             " Os que tenho alto conhecimento:" \
-            "`cool`; `soma`; `rola`; `escolha`; `chegamais`; `basta`; `log`; `ban`/`kick`; `aviso`."
+            "`cool`; `soma`; `rola`; `escolha`; `chegamais`; `basta`; `log`; `ban`/`kick`; `aviso`." \
+            "\n" \
+            "Também se quiser saber mais sobre as permissões de `Administração`, mande um `::ajuda adms`."
+
+msg_adms = """
+Vou dizer resumidamente quem pode oquê aqui e as permissões minimas do cargo mais alto seu.
+
+**Comando**  | **Permissão**
+
+`::teste`    | Gerenciar canais
+`::prompt`   | Administrador
+`::ping`     | Gerenciar canais
+`::cep`      | Gerenciar canais
+`::cpf`      | Gerenciar canais
+`::relatorio`| Administrador
+`::faxina`   | Gerenciar mensagens
+`::log`      | Gerenciar mensagens
+`::basta`    | Gerenciar mensagens
+`::liberado` | Gerenciar mensagens
+`::aviso`    | Gerenciar mensagens
+`::kick`     | Expulsar membros
+`::ban`      | Banir membros
+"""
 
 
 alta_ajuda = {
+    "adms": msg_adms,
     "cool": "Digo se algo é _cool_, como por exemplo: ::cool athena",
-    "soma": "Só somo uns números: ::soma 2 3 4 3 10",
+    "pitagoras": "Calculo uma expressão matemática, como: `(23 + 2) * 9 - 2**3`.\nAinda pode usar exponenciação = `**`, e resto de divisão = `%`",
     "rola": "Rolo um dado descompromissadamente: ::rola 1d20 = 1 dado de 20",
     "escolha": "Use para eu escolher coisas aleatórias, manda as opções em sequência: ::escolha loritta athena disboard",
     "chegamais": """Tenho um sistema de mensagens anônimas.

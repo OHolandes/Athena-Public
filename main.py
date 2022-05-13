@@ -46,7 +46,7 @@ class CommandsPrivate:
 
     @staticmethod
     @bot.command()
-    @commands.has_permissions(administrator=True)
+    @commands.has_permissions(manage_channels=True)
     async def teste(ctx, times=5, _string="Testando"):
         """Repete a mensagem um número de vezes."""
         async with ctx.typing():
@@ -80,16 +80,23 @@ class CommandsPrivate:
 
     @staticmethod
     @bot.command()
-    @commands.has_permissions(administrator=True)
+    @commands.has_permissions(manage_channels=True)
     async def ping(ctx):
         await ctx.send(f"Pong! {bot.latency}")
 
 
     @staticmethod
     @bot.command()
-    @commands.has_permissions(administrator=True)
+    @commands.has_permissions(manage_channels=True)
     async def cep(ctx):
         await ctx.send(ctx.channel.id)
+    
+
+    @staticmethod
+    @bot.command()
+    @commands.has_permissions(manage_channels=True)
+    async def cpf(ctx, membro: discord.member):
+        await ctx.send(membro.id)
 
 
     @staticmethod
@@ -255,12 +262,17 @@ class CommandsPublic:
 
     @staticmethod
     @bot.command()
-    async def soma(ctx, *nums: int):
-        """Somo uns números números."""
+    async def pitagoras(ctx, *expresion: str):
+        """Calculo uma expressão."""
         async with ctx.typing():
             type_time = random.uniform(0.5, 2)
             await asyncio.sleep(type_time)
-        await ctx.send(str(sum(nums)))
+        try:
+            result = eval("".join(expresion))
+        except Exception as error:
+            await ctx.send("Isso... é uma expressão?!")
+        else:
+            await ctx.send(str(result))
 
 
     @staticmethod
@@ -311,8 +323,14 @@ class CommandsPublic:
 
     @staticmethod
     @bot.command()
-    async def privilegios(ctx):
-        pms = ctx.author.permissions_in(ctx.channel)
+    async def privilegios(ctx, membro: discord.Member = None):
+        embed_privis = discord.Embed(title="...")
+        if membro is None:
+            pms = ctx.author.permissions_in(ctx.channel)
+            embed_privis.title = "Suas permissões"
+        else:
+            pms = membro.permissions_in(ctx.channel)
+            embed_privis.title = f"Permissões de {membro.display_name}"
         privis = f"""
         **Administrador**: {"sim" if pms.administrator else "não(ufa!)"}
 
@@ -331,11 +349,8 @@ class CommandsPublic:
         Kickar Membros: {"sim" if pms.kick_members else "não"}
         Banir membros: {"sim" if pms.ban_members else "não"}
         """
-        await ctx.send(embed=discord.Embed(
-                                        title="Suas permissões:",
-                                        description=privis
-                                    )
-                    )
+        embed_privis.description = privis
+        await ctx.send(embed=embed_privis)
 
     @staticmethod
     @bot.command()
@@ -413,7 +428,7 @@ class CommandsPublic:
     @staticmethod
     @bot.command(aliases=("comandos",))
     async def ajuda(ctx, _command: str = None):
-        if _command in [cmd.name for cmd in bot.commands]:
+        if _command in [cmd.name for cmd in bot.commands] or _command == "adms":
             await ctx.send(embed=discord.Embed(title="::"+_command,
                                             description=alta_ajuda[_command],
                                             color=0xff0000))
@@ -466,6 +481,14 @@ async def raise_permission(ctx, error):
         raise error
 
 
+@CommandsPrivate.aviso.error
+async def raise_permission(ctx, error):
+    if isinstance(error, commands.errors.MissingPermissions):
+        await ctx.send(ctx.author.mention, embed=CommandsPrivate.embed_missing_perm)
+    else:
+        raise error
+
+
 @CommandsPrivate.ban.error
 async def raise_permission(ctx, error):
     if isinstance(error, commands.errors.MissingPermissions):
@@ -483,6 +506,14 @@ async def raise_permission(ctx, error):
 
 
 @CommandsPrivate.cep.error
+async def raise_permission(ctx, error):
+    if isinstance(error, commands.errors.MissingPermissions):
+        await ctx.send(ctx.author.mention, embed=CommandsPrivate.embed_missing_perm)
+    else:
+        raise error
+
+
+@CommandsPrivate.cpf.error
 async def raise_permission(ctx, error):
     if isinstance(error, commands.errors.MissingPermissions):
         await ctx.send(ctx.author.mention, embed=CommandsPrivate.embed_missing_perm)
